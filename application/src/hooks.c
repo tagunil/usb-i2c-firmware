@@ -35,6 +35,7 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **idle_task_block,
     *idle_task_stack_size = sizeof(task_stack) / sizeof(StackType_t);
 }
 
+#ifdef configUSE_TIMERS
 void vApplicationGetTimerTaskMemory(StaticTask_t **timer_task_block,
                                     StackType_t **timer_task_stack,
                                     uint32_t *timer_task_stack_size)
@@ -46,3 +47,4 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **timer_task_block,
     *timer_task_stack = task_stack;
     *timer_task_stack_size = sizeof(task_stack) / sizeof(StackType_t);
 }
+#endif
