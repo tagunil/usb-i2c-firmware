@@ -195,8 +195,10 @@ cdc_acm_control_request(usbd_device *device,
     return USBD_REQ_NOTSUPP;
 }
 
+#define RECV_BUFFER_STORAGE_SIZE 512
+
 static StaticStreamBuffer_t recv_buffer_block;
-static uint8_t recv_buffer_storage[512];
+static uint8_t recv_buffer_storage[RECV_BUFFER_STORAGE_SIZE];
 static StreamBufferHandle_t recv_buffer;
 static volatile atomic_bool receiving;
 
@@ -226,8 +228,10 @@ static void cdc_acm_recv_callback(usbd_device *device, uint8_t endpoint)
     }
 }
 
+#define SEND_BUFFER_STORAGE_SIZE 512
+
 static StaticStreamBuffer_t send_buffer_block;
-static uint8_t send_buffer_storage[512];
+static uint8_t send_buffer_storage[SEND_BUFFER_STORAGE_SIZE];
 static StreamBufferHandle_t send_buffer;
 static volatile atomic_bool sending;
 
