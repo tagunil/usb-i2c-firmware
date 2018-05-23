@@ -7,7 +7,7 @@
 #include <task.h>
 #include <stream_buffer.h>
 
-#include <libopencm3/stm32/l0/nvic.h>
+#include <libopencm3/stm32/f0/nvic.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/syscfg.h>
