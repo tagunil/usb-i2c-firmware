@@ -40,13 +40,13 @@ extern void vAssertCalled(const char *file, int line);
 #define configTIMER_QUEUE_LENGTH 5
 #define configTIMER_TASK_STACK_DEPTH (configMINIMAL_STACK_SIZE * 2)
 
-#define INCLUDE_vTaskPrioritySet 1
-#define INCLUDE_uxTaskPriorityGet 1
-#define INCLUDE_vTaskDelete 1
-#define INCLUDE_vTaskCleanUpResources 1
-#define INCLUDE_vTaskSuspend 1
-#define INCLUDE_vTaskDelayUntil 1
-#define INCLUDE_vTaskDelay 1
+#define INCLUDE_vTaskPrioritySet 0
+#define INCLUDE_uxTaskPriorityGet 0
+#define INCLUDE_vTaskDelete 0
+#define INCLUDE_vTaskCleanUpResources 0
+#define INCLUDE_vTaskSuspend 0
+#define INCLUDE_vTaskDelayUntil 0
+#define INCLUDE_vTaskDelay 0
 
 #define configASSERT(x) if ((x) == 0) vAssertCalled(__FILE__, __LINE__)
 
