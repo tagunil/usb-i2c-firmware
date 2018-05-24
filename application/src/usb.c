@@ -294,6 +294,14 @@ static inline bool usb_irq_active(void)
     return (*USB_ISTR_REG & mask) != 0;
 }
 
+static inline void usb_enable_irq(void)
+{
+    static const uint32_t mask = USB_CNTR_RESETM | USB_CNTR_CTRM |
+                                 USB_CNTR_SUSPM | USB_CNTR_WKUPM |
+                                 USB_CNTR_SOFM;
+    *USB_CNTR_REG |= mask;
+}
+
 enum
 {
     POLL_NOTIFICATION = 0x01,
@@ -408,10 +416,7 @@ void usb_init(void)
                                     task_stack,
                                     &task_data);
 
-    static const uint32_t mask = USB_CNTR_RESETM | USB_CNTR_CTRM |
-                                 USB_CNTR_SUSPM | USB_CNTR_WKUPM |
-                                 USB_CNTR_SOFM;
-    *USB_CNTR_REG |= mask;
+    usb_enable_irq();
 
     nvic_enable_irq(NVIC_USB_IRQ);
 }
