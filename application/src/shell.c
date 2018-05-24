@@ -5,11 +5,98 @@
 #include <stdbool.h>
 #include <stdnoreturn.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
 
 #include "usb.h"
+
+static bool write_hex(const uint8_t *data, char *string, size_t length)
+{
+    for (size_t position = 0; position < length; position++) {
+        uint8_t value = data[position];
+
+        for (size_t place = 0; place < 2; place++) {
+            char digit = value & 0x0f;
+
+            value >>= 4;
+
+            if (digit <= 9) {
+                digit += '0';
+            } else {
+                digit += 'a' - 10;
+            }
+
+            string[position * 2 + 1 - place] = digit;
+        }
+    }
+
+    string[length * 2] = '\0';
+
+    return true;
+}
+
+static bool read_hex(const char *string, uint8_t *data, size_t length)
+{
+    for (size_t position = 0; position < length; position++) {
+        uint8_t value = 0;
+
+        for (size_t place = 0; place < 2; place++) {
+            char digit = string[position * 2 + place];
+
+            value <<= 4;
+
+            if ((digit >= '0') && (digit <= '9')) {
+                value += digit - '0';
+            } else if ((digit >= 'a') && (digit <= 'f')) {
+                value += digit - 'a' + 10;
+            } else {
+                return false;
+            }
+        }
+
+        data[position] = value;
+    }
+
+    return true;
+}
+
+static int read_hex_u8(const char *string)
+{
+    uint8_t byte;
+
+    if (!read_hex(string, &byte, 1)) {
+        return -1;
+    }
+
+    return byte;
+}
+
+static int read_u16(const char *string)
+{
+    int value = 0;
+
+    const char *pointer = string;
+    while (*pointer != '\0') {
+        char digit = *pointer;
+
+        if ((digit >= '0') && (digit <= '9')) {
+            value *= 10;
+            value += digit - '0';
+
+            if (value > UINT16_MAX) {
+                return -1;
+            }
+        } else {
+            return -1;
+        }
+
+        pointer++;
+    }
+
+    return value;
+}
 
 static void send_ok(void)
 {
