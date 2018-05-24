@@ -420,7 +420,7 @@ void usb_init(void)
                                     "USB",
                                     sizeof(task_stack) / sizeof(StackType_t),
                                     device,
-                                    3,
+                                    2,
                                     task_stack,
                                     &task_block);
 
