@@ -197,7 +197,7 @@ cdc_acm_control_request(usbd_device *device,
 
 #define RECV_BUFFER_STORAGE_SIZE 512
 
-static StaticStreamBuffer_t recv_buffer_block;
+static StaticStreamBuffer_t recv_buffer_data;
 static uint8_t recv_buffer_storage[RECV_BUFFER_STORAGE_SIZE];
 static StreamBufferHandle_t recv_buffer;
 static volatile atomic_bool receiving;
@@ -230,7 +230,7 @@ static void cdc_acm_recv_callback(usbd_device *device, uint8_t endpoint)
 
 #define SEND_BUFFER_STORAGE_SIZE 512
 
-static StaticStreamBuffer_t send_buffer_block;
+static StaticStreamBuffer_t send_buffer_data;
 static uint8_t send_buffer_storage[SEND_BUFFER_STORAGE_SIZE];
 static StreamBufferHandle_t send_buffer;
 static volatile atomic_bool sending;
@@ -407,13 +407,13 @@ void usb_init(void)
     recv_buffer = xStreamBufferCreateStatic(sizeof(recv_buffer_storage) - 1,
                                             1,
                                             recv_buffer_storage,
-                                            &recv_buffer_block);
+                                            &recv_buffer_data);
     receiving = true;
 
     send_buffer = xStreamBufferCreateStatic(sizeof(send_buffer_storage) - 1,
                                             1,
                                             send_buffer_storage,
-                                            &send_buffer_block);
+                                            &send_buffer_data);
     sending = false;
 
     task_handle = xTaskCreateStatic(&usb_task,
