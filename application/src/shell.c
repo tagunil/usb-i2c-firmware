@@ -104,16 +104,33 @@ static void send_ok(void)
     usb_send((const uint8_t *)answer, strlen(answer));
 }
 
+static void send_data(const uint8_t *data, size_t length)
+{
+    const char *header = "DATA ";
+    usb_send((const uint8_t *)header, strlen(header));
+
+    for (size_t position = 0; position < length; position++) {
+        char string[3];
+        write_hex(&data[position], string, 1);
+        usb_send((const uint8_t *)string, 2);
+    }
+
+    const char *trailer = "\r\n";
+    usb_send((const uint8_t *)trailer, strlen(trailer));
+}
+
 static void send_error(void)
 {
     const char *answer = "ERROR\r\n";
     usb_send((const uint8_t *)answer, strlen(answer));
 }
 
+#define MAX_DATA_LENGTH 64
+
 static void shell_process_command(char *command)
 {
     const char *action = strtok(command, " ");
-    if (!action || (action[0] == '\0')) {
+    if (!action) {
         send_error();
         return;
     }
@@ -121,9 +138,101 @@ static void shell_process_command(char *command)
     if (strcmp(action, "PING") == 0) {
         send_ok();
     } else if (strcmp(action, "READ") == 0) {
-        send_error();
+        const char *address_token = strtok(NULL, " ");
+        if (!address_token) {
+            send_error();
+            return;
+        }
+
+        if (strlen(address_token) != 2) {
+            send_error();
+            return;
+        }
+
+        int address_value = read_hex_u8(address_token);
+        if (address_value <= 0) {
+            send_error();
+            return;
+        }
+
+        uint8_t address = (uint8_t)address_value;
+
+        const char *length_token = strtok(NULL, " ");
+        if (!length_token) {
+            send_error();
+            return;
+        }
+
+        int length_value = read_u16(length_token);
+        if ((length_value <= 0) || (length_value > MAX_DATA_LENGTH)) {
+            send_error();
+            return;
+        }
+
+        size_t length = (size_t)length_value;
+
+        uint8_t data[MAX_DATA_LENGTH];
+        memset(data, 0, MAX_DATA_LENGTH);
+
+        (void)address;
+
+        send_data(data, length);
     } else if (strcmp(action, "WRITE") == 0) {
-        send_error();
+        const char *address_token = strtok(NULL, " ");
+        if (!address_token) {
+            send_error();
+            return;
+        }
+
+        if (strlen(address_token) != 2) {
+            send_error();
+            return;
+        }
+
+        int address_value = read_hex_u8(address_token);
+        if (address_value <= 0) {
+            send_error();
+            return;
+        }
+
+        uint8_t address = (uint8_t)address_value;
+
+        const char *length_token = strtok(NULL, " ");
+        if (!length_token) {
+            send_error();
+            return;
+        }
+
+        int length_value = read_u16(length_token);
+        if ((length_value <= 0) || (length_value > MAX_DATA_LENGTH)) {
+            send_error();
+            return;
+        }
+
+        size_t length = (size_t)length_value;
+
+        const char *data_token = strtok(NULL, " ");
+        if (!data_token) {
+            send_error();
+            return;
+        }
+
+        if (strlen(data_token) != length * 2) {
+            send_error();
+            return;
+        }
+
+        uint8_t data[MAX_DATA_LENGTH];
+        if (!read_hex(data_token, data, length))
+        {
+            send_error();
+            return;
+        }
+
+        (void)address;
+        (void)data;
+
+        send_ok();
     } else {
         send_error();
     }
