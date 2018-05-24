@@ -121,6 +121,8 @@ static size_t i2c_dma_transfer(uint8_t address,
 
     dma_set_memory_address(DMA1, channel, (uint32_t)data);
 
+    xSemaphoreTake(semaphore_handle, 0);
+
     dma_enable_channel(DMA1, channel);
 
     i2c_send_start(I2C1);
