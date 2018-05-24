@@ -286,27 +286,11 @@ static void cdc_acm_set_config(usbd_device *device, uint16_t wValue)
                                    cdc_acm_control_request);
 }
 
-static inline void usb_enable_irq(bool enable)
-{
-    static const uint32_t mask = USB_CNTR_RESETM | USB_CNTR_CTRM |
-                                 USB_CNTR_SUSPM | USB_CNTR_WKUPM |
-                                 USB_CNTR_SOFM;
-
-    if (enable) {
-        *USB_CNTR_REG |= mask;
-        nvic_enable_irq(NVIC_USB_IRQ);
-    } else {
-        nvic_disable_irq(NVIC_USB_IRQ);
-        *USB_CNTR_REG &= ~mask;
-    }
-}
-
 static inline bool usb_irq_active(void)
 {
     static const uint32_t mask = USB_ISTR_RESET | USB_ISTR_CTR |
                                  USB_ISTR_SUSP | USB_ISTR_WKUP |
                                  USB_ISTR_SOF;
-
     return (*USB_ISTR_REG & mask) != 0;
 }
 
@@ -325,7 +309,7 @@ void usb_isr(void)
         return;
     }
 
-    usb_enable_irq(false);
+    nvic_disable_irq(NVIC_USB_IRQ);
 
     BaseType_t need_yield;
     xTaskNotifyFromISR(task_handle, POLL_NOTIFICATION, eSetBits, &need_yield);
@@ -349,7 +333,7 @@ noreturn static void usb_task(void *parameter)
                 usbd_poll(device);
             }
 
-            usb_enable_irq(true);
+            nvic_enable_irq(NVIC_USB_IRQ);
         }
 
         if ((notification & RECV_NOTIFICATION) != 0) {
@@ -424,7 +408,12 @@ void usb_init(void)
                                     task_stack,
                                     &task_data);
 
-    usb_enable_irq(true);
+    static const uint32_t mask = USB_CNTR_RESETM | USB_CNTR_CTRM |
+                                 USB_CNTR_SUSPM | USB_CNTR_WKUPM |
+                                 USB_CNTR_SOFM;
+    *USB_CNTR_REG |= mask;
+
+    nvic_enable_irq(NVIC_USB_IRQ);
 }
 
 size_t usb_recv(uint8_t *data, size_t size)
