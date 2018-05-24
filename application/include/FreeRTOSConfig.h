@@ -27,8 +27,8 @@ extern void vAssertCalled(const char *file, int line);
 
 #define configUSE_COUNTING_SEMAPHORES 1
 
-#define configUSE_MUTEXES 1
-#define configUSE_RECURSIVE_MUTEXES 1
+#define configUSE_MUTEXES 0
+#define configUSE_RECURSIVE_MUTEXES 0
 
 #define configUSE_CO_ROUTINES 0
 #define configMAX_CO_ROUTINE_PRIORITIES 2
@@ -44,9 +44,10 @@ extern void vAssertCalled(const char *file, int line);
 #define INCLUDE_uxTaskPriorityGet 0
 #define INCLUDE_vTaskDelete 0
 #define INCLUDE_vTaskCleanUpResources 0
-#define INCLUDE_vTaskSuspend 0
+#define INCLUDE_vTaskSuspend 1
 #define INCLUDE_vTaskDelayUntil 0
 #define INCLUDE_vTaskDelay 0
+#define INCLUDE_xTaskGetCurrentTaskHandle 1
 
 #define configASSERT(x) if ((x) == 0) vAssertCalled(__FILE__, __LINE__)
 
