@@ -11,6 +11,7 @@
 #include <task.h>
 
 #include "usb.h"
+#include "i2c.h"
 
 static bool write_hex(const uint8_t *data, char *string, size_t length)
 {
@@ -172,9 +173,10 @@ static void shell_process_command(char *command)
         size_t length = (size_t)length_value;
 
         uint8_t data[MAX_DATA_LENGTH];
-        memset(data, 0, MAX_DATA_LENGTH);
-
-        (void)address;
+        if (i2c_read(address, data, length) < length) {
+            send_error();
+            return;
+        }
 
         send_data(data, length);
     } else if (strcmp(action, "WRITE") == 0) {
@@ -229,8 +231,10 @@ static void shell_process_command(char *command)
             return;
         }
 
-        (void)address;
-        (void)data;
+        if (i2c_write(address, data, length) < length) {
+            send_error();
+            return;
+        }
 
         send_ok();
     } else {
