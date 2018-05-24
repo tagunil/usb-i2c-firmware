@@ -245,11 +245,13 @@ bool is_character(uint8_t byte)
     return (byte >= ' ') && (byte <= '~');
 }
 
+#define MAX_COMMAND_LENGTH 255
+
 noreturn static void shell_task(void *parameter)
 {
     (void)parameter;
 
-    static uint8_t command_buffer[256];
+    static uint8_t command_buffer[MAX_COMMAND_LENGTH + 1];
     size_t command_length = 0;
 
     for (;;) {
@@ -266,7 +268,7 @@ noreturn static void shell_task(void *parameter)
                 command_length = 0;
             }
         } else if (is_character(byte)) {
-            if (command_length < sizeof(command_buffer) - 1) {
+            if (command_length < MAX_COMMAND_LENGTH) {
                 command_buffer[command_length] = byte;
                 command_length++;
             }
