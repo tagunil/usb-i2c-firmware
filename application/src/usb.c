@@ -376,7 +376,7 @@ noreturn static void usb_task(void *parameter)
 
 void usb_init(void)
 {
-    static StaticTask_t task_block;
+    static StaticTask_t task_data;
     static StackType_t task_stack[configMINIMAL_STACK_SIZE * 2];
 
     static usbd_device *device;
@@ -422,7 +422,7 @@ void usb_init(void)
                                     device,
                                     2,
                                     task_stack,
-                                    &task_block);
+                                    &task_data);
 
     usb_enable_irq(true);
 }

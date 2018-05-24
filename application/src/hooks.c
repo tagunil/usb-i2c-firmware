@@ -23,27 +23,27 @@ noreturn void vAssertCalled(const char *file, int line)
     }
 }
 
-void vApplicationGetIdleTaskMemory(StaticTask_t **idle_task_block,
+void vApplicationGetIdleTaskMemory(StaticTask_t **idle_task_data,
                                    StackType_t **idle_task_stack,
                                    uint32_t *idle_task_stack_size)
 {
-    static StaticTask_t task_block;
+    static StaticTask_t task_data;
     static StackType_t task_stack[configMINIMAL_STACK_SIZE];
 
-    *idle_task_block = &task_block;
+    *idle_task_data = &task_data;
     *idle_task_stack = task_stack;
     *idle_task_stack_size = sizeof(task_stack) / sizeof(StackType_t);
 }
 
 #ifdef configUSE_TIMERS
-void vApplicationGetTimerTaskMemory(StaticTask_t **timer_task_block,
+void vApplicationGetTimerTaskMemory(StaticTask_t **timer_task_data,
                                     StackType_t **timer_task_stack,
                                     uint32_t *timer_task_stack_size)
 {
-    static StaticTask_t task_block;
+    static StaticTask_t task_data;
     static StackType_t task_stack[configTIMER_TASK_STACK_DEPTH];
 
-    *timer_task_block = &task_block;
+    *timer_task_data = &task_data;
     *timer_task_stack = task_stack;
     *timer_task_stack_size = sizeof(task_stack) / sizeof(StackType_t);
 }

@@ -80,7 +80,7 @@ noreturn static void shell_task(void *parameter)
 
 void shell_init(void)
 {
-    static StaticTask_t task_block;
+    static StaticTask_t task_data;
     static StackType_t task_stack[configMINIMAL_STACK_SIZE * 2];
 
     xTaskCreateStatic(&shell_task,
@@ -89,5 +89,5 @@ void shell_init(void)
                       NULL,
                       1,
                       task_stack,
-                      &task_block);
+                      &task_data);
 }
