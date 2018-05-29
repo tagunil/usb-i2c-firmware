@@ -8,6 +8,8 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 
+#include "clock.h"
+
 static SemaphoreHandle_t semaphore_handle;
 
 static inline bool i2c1_irq_active(void)
@@ -55,9 +57,11 @@ void i2c_init(void)
 {
     static StaticSemaphore_t semaphore_data;
 
+    RCC_CFGR3 |= RCC_CFGR3_I2C1SW;
+
     rcc_periph_clock_enable(RCC_I2C1);
 
-    i2c_set_speed(I2C1, i2c_speed_fm_400k, 8);
+    i2c_set_speed(I2C1, i2c_speed_fm_400k, system_core_clock / 1000000);
 
     i2c_peripheral_enable(I2C1);
 
