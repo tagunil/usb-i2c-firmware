@@ -140,7 +140,7 @@ static size_t i2c_dma_transfer(uint8_t address,
     nvic_clear_pending_irq(NVIC_DMA1_CHANNEL2_3_IRQ);
     nvic_enable_irq(NVIC_DMA1_CHANNEL2_3_IRQ);
 
-    if (i2c1_irq_active()) {
+    if (i2c_nack(I2C1)) {
         bytes = 0;
     }
 
