@@ -28,7 +28,7 @@ static inline void i2c1_clear_irq(void)
 
 void i2c1_isr(void)
 {
-    if (i2c1_irq_active()) {
+    if (!i2c1_irq_active()) {
         return;
     }
 
