@@ -14,16 +14,10 @@ static SemaphoreHandle_t semaphore_handle;
 
 static inline bool i2c1_irq_active(void)
 {
-    static const uint32_t mask = I2C_ISR_ARLO | I2C_ISR_BERR |
-                                 I2C_ISR_NACKF;
+    static const uint32_t mask = I2C_ISR_ARLO | I2C_ISR_BERR | I2C_ISR_OVR |
+                                 I2C_ISR_PECERR | I2C_ISR_TIMEOUT |
+                                 I2C_ISR_ALERT | I2C_ISR_NACKF;
     return (I2C_ISR(I2C1) & mask) != 0;
-}
-
-static inline void i2c1_clear_irq(void)
-{
-    static const uint32_t mask = I2C_ICR_ARLOCF | I2C_ICR_BERRCF |
-                                 I2C_ICR_NACKCF;
-    I2C_ICR(I2C1) |= mask;
 }
 
 void i2c1_isr(void)
@@ -98,6 +92,16 @@ void i2c_init(void)
     nvic_enable_irq(NVIC_I2C1_IRQ);
 }
 
+static inline void i2c1_soft_reset(void)
+{
+    I2C_CR1(I2C1) &= ~I2C_CR1_PE;
+
+    while ((I2C_CR1(I2C1) & I2C_CR1_PE) != 0) {
+    }
+
+    I2C_CR1(I2C1) |= I2C_CR1_PE;
+}
+
 static size_t i2c_dma_transfer(uint8_t address,
                                bool write,
                                volatile const uint8_t *data,
@@ -135,7 +139,8 @@ static size_t i2c_dma_transfer(uint8_t address,
 
     dma_disable_channel(DMA1, channel);
 
-    if (dma_get_interrupt_flag(DMA1, channel, DMA_ISR_TEIF_BIT)) {
+    if (!dma_get_interrupt_flag(DMA1, channel, DMA_ISR_TCIF_BIT) ||
+        dma_get_interrupt_flag(DMA1, channel, DMA_ISR_TEIF_BIT)) {
         bytes = 0;
     }
 
@@ -148,7 +153,7 @@ static size_t i2c_dma_transfer(uint8_t address,
         bytes = 0;
     }
 
-    i2c1_clear_irq();
+    i2c1_soft_reset();
 
     nvic_clear_pending_irq(NVIC_I2C1_IRQ);
     nvic_enable_irq(NVIC_I2C1_IRQ);
