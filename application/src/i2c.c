@@ -135,7 +135,10 @@ static size_t i2c_dma_transfer(uint8_t address,
 
     i2c_send_start(I2C1);
 
-    xSemaphoreTake(semaphore_handle, portMAX_DELAY);
+    xSemaphoreTake(semaphore_handle, pdMS_TO_TICKS(1000));
+
+    nvic_disable_irq(NVIC_I2C1_IRQ);
+    nvic_disable_irq(NVIC_DMA1_CHANNEL2_3_IRQ);
 
     dma_disable_channel(DMA1, channel);
 
