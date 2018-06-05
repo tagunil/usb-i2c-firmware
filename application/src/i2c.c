@@ -64,6 +64,8 @@ void i2c_init(void)
 
     i2c_peripheral_enable(I2C1);
 
+    rcc_periph_clock_enable(RCC_DMA1);
+
     i2c_enable_rxdma(I2C1);
     i2c_enable_txdma(I2C1);
 
