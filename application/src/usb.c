@@ -237,6 +237,8 @@ static volatile atomic_bool sending;
 
 static void cdc_acm_send_callback(usbd_device *device, uint8_t endpoint)
 {
+    static size_t sent_length = 0;
+
     uint8_t buffer[DATA_IN_PACKET_SIZE];
 
     size_t length = xStreamBufferReceive(send_buffer,
@@ -246,6 +248,8 @@ static void cdc_acm_send_callback(usbd_device *device, uint8_t endpoint)
 
     if (length > 0) {
         sending = true;
+    } else if (sent_length < DATA_IN_PACKET_SIZE) {
+        sending = false;
     }
 
     if (sending) {
@@ -255,9 +259,7 @@ static void cdc_acm_send_callback(usbd_device *device, uint8_t endpoint)
                              (uint16_t)length);
     }
 
-    if (length < DATA_IN_PACKET_SIZE) {
-        sending = false;
-    }
+    sent_length = length;
 }
 
 static void cdc_acm_set_config(usbd_device *device, uint16_t wValue)
