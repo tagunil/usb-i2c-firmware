@@ -81,11 +81,11 @@ void i2c_init(void)
     dma_set_memory_size(DMA1, DMA_CHANNEL2, DMA_CCR_MSIZE_8BIT);
     dma_set_memory_size(DMA1, DMA_CHANNEL3, DMA_CCR_MSIZE_8BIT);
 
-    dma_set_peripheral_size(DMA1, DMA_CHANNEL2, DMA_CCR_PSIZE_32BIT);
-    dma_set_peripheral_size(DMA1, DMA_CHANNEL3, DMA_CCR_PSIZE_32BIT);
+    dma_set_peripheral_size(DMA1, DMA_CHANNEL2, DMA_CCR_PSIZE_8BIT);
+    dma_set_peripheral_size(DMA1, DMA_CHANNEL3, DMA_CCR_PSIZE_8BIT);
 
-    dma_set_peripheral_address(DMA1, DMA_CHANNEL2, I2C1_TXDR);
-    dma_set_peripheral_address(DMA1, DMA_CHANNEL3, I2C1_RXDR);
+    dma_set_peripheral_address(DMA1, DMA_CHANNEL2, (uint32_t)&I2C1_TXDR);
+    dma_set_peripheral_address(DMA1, DMA_CHANNEL3, (uint32_t)&I2C1_RXDR);
 
     semaphore_handle = xSemaphoreCreateBinaryStatic(&semaphore_data);
 
