@@ -2,6 +2,7 @@
 
 #include <libopencm3/stm32/f0/nvic.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/i2c.h>
 #include <libopencm3/stm32/dma.h>
 
@@ -50,6 +51,10 @@ void dma1_channel2_3_isr(void)
 void i2c_init(void)
 {
     static StaticSemaphore_t semaphore_data;
+
+    rcc_periph_clock_enable(RCC_GPIOF);
+    gpio_mode_setup(GPIOF, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO0 | GPIO1);
+    gpio_set_af(GPIOF, GPIO_AF1, GPIO0 | GPIO1);
 
     RCC_CFGR3 |= RCC_CFGR3_I2C1SW;
 
