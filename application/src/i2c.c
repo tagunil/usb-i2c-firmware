@@ -53,8 +53,11 @@ void i2c_init(void)
     static StaticSemaphore_t semaphore_data;
 
     rcc_periph_clock_enable(RCC_GPIOF);
-    gpio_mode_setup(GPIOF, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO0 | GPIO1);
-    gpio_set_af(GPIOF, GPIO_AF1, GPIO0 | GPIO1);
+
+    const uint16_t gpios = GPIO0 | GPIO1;
+    gpio_mode_setup(GPIOF, GPIO_MODE_AF, GPIO_PUPD_NONE, gpios);
+    gpio_set_output_options(GPIOF, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, gpios);
+    gpio_set_af(GPIOF, GPIO_AF1, gpios);
 
     RCC_CFGR3 |= RCC_CFGR3_I2C1SW;
 
