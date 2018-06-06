@@ -17,31 +17,51 @@ static inline bool i2c1_irq_active(void)
 {
     static const uint32_t mask = I2C_ISR_ARLO | I2C_ISR_BERR | I2C_ISR_OVR |
                                  I2C_ISR_PECERR | I2C_ISR_TIMEOUT |
-                                 I2C_ISR_ALERT | I2C_ISR_NACKF;
+                                 I2C_ISR_ALERT | I2C_ISR_NACKF | I2C_ISR_TC;
     return (I2C_ISR(I2C1) & mask) != 0;
 }
 
 void i2c1_isr(void)
 {
+    // Work around spurious bus errors
+    if ((I2C_ISR(I2C1) & I2C_ISR_BERR) != 0) {
+        I2C_ICR(I2C1) |= I2C_ICR_BERRCF;
+    }
+
     if (!i2c1_irq_active()) {
         return;
     }
 
     nvic_disable_irq(NVIC_I2C1_IRQ);
 
+    if (i2c_transfer_complete(I2C1)) {
+        if ((I2C_CR2(I2C1) & I2C_CR2_RD_WRN) != 0) {
+            return;
+        }
+    }
+
     BaseType_t need_yield;
     xSemaphoreGiveFromISR(semaphore_handle, &need_yield);
     portYIELD_FROM_ISR(need_yield);
 }
 
+static inline bool dma1_channel2_3_irq_active(void)
+{
+    return dma_get_interrupt_flag(DMA1, DMA_CHANNEL2, DMA_ISR_GIF_BIT) ||
+           dma_get_interrupt_flag(DMA1, DMA_CHANNEL3, DMA_ISR_GIF_BIT);
+}
+
 void dma1_channel2_3_isr(void)
 {
-    if (!dma_get_interrupt_flag(DMA1, DMA_CHANNEL2, DMA_ISR_GIF_BIT) &&
-        !dma_get_interrupt_flag(DMA1, DMA_CHANNEL3, DMA_ISR_GIF_BIT)) {
+    if (!dma1_channel2_3_irq_active()) {
         return;
     }
 
     nvic_disable_irq(NVIC_DMA1_CHANNEL2_3_IRQ);
+
+    if (dma_get_interrupt_flag(DMA1, DMA_CHANNEL2, DMA_ISR_TCIF_BIT)) {
+        return;
+    }
 
     BaseType_t need_yield;
     xSemaphoreGiveFromISR(semaphore_handle, &need_yield);
@@ -130,8 +150,6 @@ static size_t i2c_dma_transfer(uint8_t address,
     i2c_set_7bit_addr_mode(I2C1);
     i2c_set_7bit_address(I2C1, address);
 
-    i2c_enable_autoend(I2C1);
-
     uint8_t bytes = (size < 255) ? (uint8_t)size : 255;
 
     i2c_set_bytes_to_transfer(I2C1, bytes);
@@ -147,10 +165,19 @@ static size_t i2c_dma_transfer(uint8_t address,
 
     xSemaphoreTake(semaphore_handle, pdMS_TO_TICKS(1000));
 
-    nvic_disable_irq(NVIC_I2C1_IRQ);
-    nvic_disable_irq(NVIC_DMA1_CHANNEL2_3_IRQ);
-
     dma_disable_channel(DMA1, channel);
+
+    if (i2c_transfer_complete(I2C1)) {
+        i2c_send_stop(I2C1);
+    } else {
+        if (i2c_nack(I2C1)) {
+            I2C_ICR(I2C1) |= I2C_ICR_NACKCF | I2C_ICR_STOPCF;
+        } else {
+            i2c1_soft_reset();
+        }
+
+        bytes = 0;
+    }
 
     if (!dma_get_interrupt_flag(DMA1, channel, DMA_ISR_TCIF_BIT) ||
         dma_get_interrupt_flag(DMA1, channel, DMA_ISR_TEIF_BIT)) {
@@ -161,12 +188,6 @@ static size_t i2c_dma_transfer(uint8_t address,
 
     nvic_clear_pending_irq(NVIC_DMA1_CHANNEL2_3_IRQ);
     nvic_enable_irq(NVIC_DMA1_CHANNEL2_3_IRQ);
-
-    if (i2c_nack(I2C1)) {
-        bytes = 0;
-    }
-
-    i2c1_soft_reset();
 
     nvic_clear_pending_irq(NVIC_I2C1_IRQ);
     nvic_enable_irq(NVIC_I2C1_IRQ);
