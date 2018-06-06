@@ -2,8 +2,6 @@
 
 #include "clock.h"
 
-extern void vAssertCalled(const char *file, int line);
-
 #define configUSE_PREEMPTION 1
 #define configCPU_CLOCK_HZ (system_core_clock)
 #define configTICK_RATE_HZ 1000
@@ -49,7 +47,10 @@ extern void vAssertCalled(const char *file, int line);
 #define INCLUDE_vTaskDelay 0
 #define INCLUDE_xTaskGetCurrentTaskHandle 1
 
+#ifdef DEBUG
+extern void vAssertCalled(const char *file, int line);
 #define configASSERT(x) if ((x) == 0) vAssertCalled(__FILE__, __LINE__)
+#endif
 
 #define vPortSVCHandler sv_call_handler
 #define xPortPendSVHandler pend_sv_handler

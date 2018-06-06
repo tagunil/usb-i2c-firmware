@@ -12,6 +12,7 @@ noreturn void vApplicationStackOverflowHook(TaskHandle_t task, char *name)
     }
 }
 
+#ifdef DEBUG
 noreturn void vAssertCalled(const char *file, int line)
 {
     (void)file;
@@ -22,6 +23,7 @@ noreturn void vAssertCalled(const char *file, int line)
     for (;;) {
     }
 }
+#endif
 
 void vApplicationGetIdleTaskMemory(StaticTask_t **idle_task_data,
                                    StackType_t **idle_task_stack,
