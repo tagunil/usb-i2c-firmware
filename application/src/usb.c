@@ -2,6 +2,7 @@
 
 #include <stdnoreturn.h>
 #include <stdatomic.h>
+#include <string.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
@@ -178,6 +179,10 @@ static const char *strings[] = {
     "000000000000000000000000"
 };
 
+#define USB_CDC_REQ_SET_LINE_CODING 0x20
+#define USB_CDC_REQ_GET_LINE_CODING 0x21
+#define USB_CDC_REQ_SET_CONTROL_LINE_STATE 0x22
+
 static enum usbd_request_return_codes
 cdc_acm_control_request(usbd_device *device,
                         struct usb_setup_data *request,
@@ -186,13 +191,30 @@ cdc_acm_control_request(usbd_device *device,
                         void (**complete)(usbd_device *device,
                                           struct usb_setup_data *request))
 {
+    static struct usb_cdc_line_coding line_coding = {0};
+
     (void)device;
-    (void)request;
-    (void)buffer;
-    (void)length;
     (void)complete;
 
-    return USBD_REQ_NOTSUPP;
+    switch (request->bRequest) {
+    case USB_CDC_REQ_SET_LINE_CODING:
+        if (*length < sizeof(struct usb_cdc_line_coding)) {
+            return USBD_REQ_NOTSUPP;
+        }
+        memcpy(&line_coding, *buffer, sizeof(struct usb_cdc_line_coding));
+        return USBD_REQ_HANDLED;
+
+    case USB_CDC_REQ_GET_LINE_CODING:
+        *buffer = (uint8_t *)(&line_coding);
+        *length = sizeof(struct usb_cdc_line_coding);
+        return USBD_REQ_HANDLED;
+
+    case USB_CDC_REQ_SET_CONTROL_LINE_STATE:
+        return USBD_REQ_HANDLED;
+
+    default:
+        return USBD_REQ_NOTSUPP;
+    }
 }
 
 #define RECV_BUFFER_STORAGE_SIZE 512
