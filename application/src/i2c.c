@@ -79,7 +79,7 @@ void i2c_init(void)
     gpio_set_output_options(GPIOF, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, gpios);
     gpio_set_af(GPIOF, GPIO_AF1, gpios);
 
-    RCC_CFGR3 |= RCC_CFGR3_I2C1SW;
+    rcc_set_i2c_clock_sysclk(I2C1);
 
     rcc_periph_clock_enable(RCC_I2C1);
 
