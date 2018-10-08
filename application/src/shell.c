@@ -173,7 +173,7 @@ static void shell_process_command(char *command)
         size_t length = (size_t)length_value;
 
         uint8_t data[MAX_DATA_LENGTH];
-        if (i2c_read(address, data, length) < length) {
+        if (!i2c_read(address, data, length)) {
             send_error();
             return;
         }
@@ -231,7 +231,170 @@ static void shell_process_command(char *command)
             return;
         }
 
-        if (i2c_write(address, data, length) < length) {
+        if (!i2c_write(address, data, length)) {
+            send_error();
+            return;
+        }
+
+        send_ok();
+    } else if (strcmp(action, "WRITE_READ") == 0) {
+        const char *address_token = strtok(NULL, " ");
+        if (!address_token) {
+            send_error();
+            return;
+        }
+
+        if (strlen(address_token) != 2) {
+            send_error();
+            return;
+        }
+
+        int address_value = read_hex_u8(address_token);
+        if (address_value <= 0) {
+            send_error();
+            return;
+        }
+
+        uint8_t address = (uint8_t)address_value;
+
+        const char *length_1_token = strtok(NULL, " ");
+        if (!length_1_token) {
+            send_error();
+            return;
+        }
+
+        int length_1_value = read_u16(length_1_token);
+        if ((length_1_value <= 0) || (length_1_value > MAX_DATA_LENGTH)) {
+            send_error();
+            return;
+        }
+
+        size_t length_1 = (size_t)length_1_value;
+
+        const char *data_1_token = strtok(NULL, " ");
+        if (!data_1_token) {
+            send_error();
+            return;
+        }
+
+        if (strlen(data_1_token) != length_1 * 2) {
+            send_error();
+            return;
+        }
+
+        uint8_t data_1[MAX_DATA_LENGTH];
+        if (!read_hex(data_1_token, data_1, length_1))
+        {
+            send_error();
+            return;
+        }
+
+        const char *length_2_token = strtok(NULL, " ");
+        if (!length_2_token) {
+            send_error();
+            return;
+        }
+
+        int length_2_value = read_u16(length_2_token);
+        if ((length_2_value <= 0) || (length_2_value > MAX_DATA_LENGTH)) {
+            send_error();
+            return;
+        }
+
+        size_t length_2 = (size_t)length_2_value;
+
+        uint8_t data_2[MAX_DATA_LENGTH];
+        if (!i2c_write_read(address, data_1, length_1, data_2, length_2)) {
+            send_error();
+            return;
+        }
+
+        send_data(data_2, length_2);
+    } else if (strcmp(action, "WRITE_WRITE") == 0) {
+        const char *address_token = strtok(NULL, " ");
+        if (!address_token) {
+            send_error();
+            return;
+        }
+
+        if (strlen(address_token) != 2) {
+            send_error();
+            return;
+        }
+
+        int address_value = read_hex_u8(address_token);
+        if (address_value <= 0) {
+            send_error();
+            return;
+        }
+
+        uint8_t address = (uint8_t)address_value;
+
+        const char *length_1_token = strtok(NULL, " ");
+        if (!length_1_token) {
+            send_error();
+            return;
+        }
+
+        int length_1_value = read_u16(length_1_token);
+        if ((length_1_value <= 0) || (length_1_value > MAX_DATA_LENGTH)) {
+            send_error();
+            return;
+        }
+
+        size_t length_1 = (size_t)length_1_value;
+
+        const char *data_1_token = strtok(NULL, " ");
+        if (!data_1_token) {
+            send_error();
+            return;
+        }
+
+        if (strlen(data_1_token) != length_1 * 2) {
+            send_error();
+            return;
+        }
+
+        uint8_t data_1[MAX_DATA_LENGTH];
+        if (!read_hex(data_1_token, data_1, length_1))
+        {
+            send_error();
+            return;
+        }
+
+        const char *length_2_token = strtok(NULL, " ");
+        if (!length_2_token) {
+            send_error();
+            return;
+        }
+
+        int length_2_value = read_u16(length_2_token);
+        if ((length_2_value <= 0) || (length_2_value > MAX_DATA_LENGTH)) {
+            send_error();
+            return;
+        }
+
+        size_t length_2 = (size_t)length_2_value;
+
+        const char *data_2_token = strtok(NULL, " ");
+        if (!data_2_token) {
+            send_error();
+            return;
+        }
+
+        if (strlen(data_2_token) != length_2 * 2) {
+            send_error();
+            return;
+        }
+
+        uint8_t data_2[MAX_DATA_LENGTH];
+        if (!read_hex(data_2_token, data_2, length_2))
+        {
+            send_error();
+            return;
+        }
+
+        if (!i2c_write_write(address, data_1, length_1, data_2, length_2)) {
             send_error();
             return;
         }
@@ -249,7 +412,7 @@ bool is_character(uint8_t byte)
     return (byte >= ' ') && (byte <= '~');
 }
 
-#define MAX_COMMAND_LENGTH 255
+#define MAX_COMMAND_LENGTH 511
 
 noreturn static void shell_task(void *parameter)
 {

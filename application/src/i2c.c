@@ -135,9 +135,14 @@ static inline void i2c1_soft_reset(void)
 static size_t i2c_dma_transfer(uint8_t address,
                                bool write,
                                volatile const uint8_t *data,
-                               size_t size)
+                               size_t size,
+                               bool stop)
 {
     uint8_t channel;
+
+    if (size == 0) {
+        return 0;
+    }
 
     if (write) {
         channel = DMA_CHANNEL2;
@@ -168,7 +173,9 @@ static size_t i2c_dma_transfer(uint8_t address,
     dma_disable_channel(DMA1, channel);
 
     if (i2c_transfer_complete(I2C1)) {
-        i2c_send_stop(I2C1);
+        if (stop) {
+            i2c_send_stop(I2C1);
+        }
     } else {
         if (i2c_nack(I2C1)) {
             I2C_ICR(I2C1) |= I2C_ICR_NACKCF | I2C_ICR_STOPCF;
@@ -195,12 +202,50 @@ static size_t i2c_dma_transfer(uint8_t address,
     return bytes;
 }
 
-size_t i2c_read(uint8_t address, uint8_t *data, size_t size)
+bool i2c_read(uint8_t address, uint8_t *data, size_t size)
 {
-    return i2c_dma_transfer(address, false, data, size);
+    if (i2c_dma_transfer(address, false, data, size, true) != size) {
+        return false;
+    }
+
+    return true;
 }
 
-size_t i2c_write(uint8_t address, const uint8_t *data, size_t size)
+bool i2c_write(uint8_t address, const uint8_t *data, size_t size)
 {
-    return i2c_dma_transfer(address, true, data, size);
+    if (i2c_dma_transfer(address, true, data, size, true) != size) {
+        return false;
+    }
+
+    return true;
+}
+
+bool i2c_write_read(uint8_t address,
+                    const uint8_t *data_1, size_t size_1,
+                    uint8_t *data_2, size_t size_2)
+{
+    if (i2c_dma_transfer(address, true, data_1, size_1, false) != size_1) {
+        return false;
+    }
+
+    if (i2c_dma_transfer(address, false, data_2, size_2, true) != size_2) {
+        return false;
+    }
+
+    return true;
+}
+
+bool i2c_write_write(uint8_t address,
+                     const uint8_t *data_1, size_t size_1,
+                     const uint8_t *data_2, size_t size_2)
+{
+    if (i2c_dma_transfer(address, true, data_1, size_1, false) != size_1) {
+        return false;
+    }
+
+    if (i2c_dma_transfer(address, true, data_2, size_2, true) != size_2) {
+        return false;
+    }
+
+    return true;
 }
